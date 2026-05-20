@@ -1,17 +1,33 @@
-# React + Vite
+# Контрольная работа №5 — Итоговый проект
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Выполненные практические работы: №25 Webpack/Vite ✅ | №26 GraphQL ✅ | №27 RabbitMQ ✅
 
-Currently, two official plugins are available:
+## Что выполнено в каждой практической
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+№25 Webpack/Vite: создано React-приложение с Vite, реализованы два маршрута (Главная и О нас), применена ленивая загрузка через React.lazy и Suspense, добавлен анализатор бандла (rollup-plugin-visualizer), production сборка работает без ошибок.
 
-## React Compiler
+№26 GraphQL: реализован GraphQL API с Apollo Server, созданы типы Book и Author со связью "один-ко-многим", реализованы Query (books, book, authors, author) и Mutation (createBook, createAuthor), написаны резолверы для всех полей, сервер запущен на порту 4000.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+№27 RabbitMQ: реализована система асинхронной обработки задач с RabbitMQ, создан Producer API на Express (POST /tasks), реализованы Consumer-воркеры с retry логикой (экспоненциальная задержка, 3 попытки), настроена Dead Letter Queue (DLQ), запущены два воркера, задачи распределяются между ними.
 
-## Expanding the ESLint configuration
+## Как проверить
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
-# front5kr
+### №25 Webpack/Vite
+Запуск: cd front5kr && npm install && npm run dev
+Проверка: открыть http://localhost:5173, переключение между страницами "Главная" и "О нас (lazy)" — страница "О нас" загружается отдельным чанком.
+Сборка: npm run build, откроется bundle-report.html с визуализацией бандла.
+
+### №26 GraphQL
+Запуск: cd graphql-books && npm install && node server.js
+Проверка: открыть http://localhost:4000, выполнить в Apollo Sandbox запросы:
+  query { books { title year author { name } } }
+  query { author(id: "1") { name books { title } } }
+  mutation { createBook(title: "Новая книга", authorId: "1", year: 2024) { id title } }
+
+### №27 RabbitMQ
+Запуск: cd rabbitmq-tasks && docker compose up -d
+  PORT=3003 node producer.js (терминал 1)
+  WORKER_ID=1 node worker.js (терминал 2)
+  WORKER_ID=2 node worker.js (терминал 3)
+Проверка: curl -X POST http://localhost:3003/tasks -H "Content-Type: application/json" -d '{"type":"email","payload":{"to":"test@mail.com","subject":"Hello"}}'
+Ожидаемый результат: один из воркеров обрабатывает задачу, при ошибке происходит повтор через экспоненциальную задержку (3 попытки), затем задача уходит в DLQ.
